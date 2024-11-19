@@ -1,0 +1,118 @@
+### 1. Preparar os Dados
+#Certefique-se de que seus dados de abstenção por província estão em um data frame com pelo menos duas colunas: Provincia e Taxa_Abstencao.
+# Os dados da alienação eleitoral podem ser encontrados no pagina web da CNE (www)
+
+#Você precisará de um shapefile das províncias de Moçambique
+#Precisará também de um ficheiro CSV com a taxa de abstenção.
+
+### 2. Carregar o Shapefile de Moçambique e Dados Eleitorais
+#Carregar as bibliotecas
+library(sf)
+library(dplyr)
+library(ggplot2)
+remotes::install_github('r-tmap/tmap')
+library(tmap)
+library(readxl)
+
+# Carregar o shapefile das províncias
+file.choose()
+mapa_provincias <- st_read(file.choose())
+
+# Carregar os dados de abstenção
+dados_abstencao <- read_excel(file.choose())
+
+
+# Mesclar/Juntar os dados com o shapefile
+mapa_dados <- mapa_provincias %>%
+  left_join(dados_abstencao, by = "Provincia")
+
+
+## 3. Criar o Mapa da Taxa de Abstenção
+
+# Paleta de cores personalizada (substitua pelos códigos hexadecimais exatos)
+cores_abstencao <- c("#F4A582", "#FD8D3C", "#E34A33", "#B30000", "#7F0000")
+
+# Definir o modo de plotagem estática
+tmap_mode("plot")
+
+# Gerar o mapa da abstenção 
+mapa_abstencao <- tm_shape(mapa_dados) +
+  tm_polygons("Taxa_Abstencao", title = "Taxa de Abstenção (%)",
+              palette = cores_personalizadas, style = "quantile") +
+  tm_layout(title = "Taxa de Abstenção por Província - Moçambique 2024",
+            frame = FALSE) # frame = FALSE remove o fundo
+# Criar o mapa com o layout desejado
+mapa_abstencao <- tm_shape(mapa_dados) +
+  tm_polygons("Taxa_Abstencao", title = "Taxa de Abstenção (%)",
+              palette = cores_abstencao, style = "fixed",
+              breaks = c(0, 37, 40, 45, 50, 54, 63, 100)) +
+  tm_text("Provincia", size = 0.7, col = "black") +  
+  tm_layout(
+    title = "Taxa de Abstenção por Província - Eleições Gerais de Moçambique 2024",
+    title.size = 1.5,
+    legend.position = c("right", "center"),
+    legend.title.size = 1.1,
+    legend.text.size = 0.9,
+    legend.width = 0.5,
+    legend.bg.color = "white",
+    legend.bg.alpha = 0.7,
+    inner.margins = c(0.05, 0.05, 0.1, 0.1)
+  ) +
+  tm_credits("Fonte: CNE | CRS: WGS 84 | Autor: Edilson Célia Nhanenge", 
+             position = c("center", "BOTTOM"))
+
+# Exportar o mapa para PDF em tamanho A4
+tmap_save(mapa_abstencao, "Mapa_Abstencao_Eleitoral.pdf", width = 8.27, height = 11.69, units = "in")
+
+# Salvar o mapa como PNG
+tmap_save(mapa_abstencao, "Mapa_Abstencao_Eleitoral.png", width = 8.27, height = 11.69, units = "in")
+
+
+## 4. Criar Gráfico
+# Carregar a biblioteca ggplot2
+
+library(ggplot2)
+library(gridExtra)
+        
+ # Paleta de cores expandida para 11 províncias
+cores_grafico <- c("#FF3814", "#FF927D", "#FF6450", "#FF927D", "#FFE5D9", 
+                           "#FFE5D9", "#FF6814", "#FF3814", "#FF927D", "#FFC4B3", "#FF3814")
+        
+# Criar o gráfico de baras
+grafico_abstencao <- ggplot(mapa_dados, aes(x = Provincia, y = Taxa_Abstencao, fill = Provincia)) +
+  geom_bar(stat = "identity", width = 0.7) +
+  scale_fill_manual(values = cores_grafico) + 
+  labs(title = "Taxa de Abstenção por Província", y = "Taxa de Abstenção (%)", x = "") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        plot.title = element_text(hjust = 0.5, size = 14),
+        axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Exibir o gráfico
+print(grafico_abstencao)
+
+
+## 5. Gráfico de Pizza
+
+dados_pizza <- data.frame(
+  Categoria = c("Votos validos", "Abstenção", "Votos Nulos", "Votos Brancos"),
+  Porcentagem = c(36, 57, 3, 4)  #Em percetagem
+)
+
+# Criando o gráfico de pizza
+grafico_pizza <- ggplot(dados_pizza, aes(x = "", y = Porcentagem, fill = Categoria)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  scale_fill_manual(values = c("blue", "red", "gray", "green")) +
+  labs(title = "Participação Eleitoral (%)") +
+  theme_void() + 
+  theme(plot.title = element_text(hjust = 0.5, size = 14)) +
+  geom_text(aes(label = paste0(round(Porcentagem, 1), "%")), position = position_stack(vjust = 0.5))
+
+# Exibir o gráfico
+print(grafico_pizza)
+
+
+## 6. Relatório.
+
+#R Markdown
