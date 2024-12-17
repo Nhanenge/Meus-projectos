@@ -3,7 +3,7 @@
 # Os dados da alienação eleitoral podem ser encontrados no pagina web da CNE (www)
 
 #Você precisará de um shapefile das províncias de Moçambique
-#Precisará também de um ficheiro CSV com a taxa de abstenção.
+#Precisará também de um ficheiro CSV com a taxa de abstenção
 
 ### 2. Carregar o Shapefile de Moçambique e Dados Eleitorais
 #Carregar as bibliotecas
